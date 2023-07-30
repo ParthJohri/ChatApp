@@ -12,7 +12,7 @@ function ChatMessage(props: { message: Message }) {
     return (
       <div className="col-start-1 col-end-8 p-3 rounded-lg">
         <div className="flex flex-row items-center">
-          <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0">
+          <div className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-500 flex-shrink-0">
             A
           </div>
           <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl text-left">
@@ -26,10 +26,10 @@ function ChatMessage(props: { message: Message }) {
     return (
       <div className="col-start-6 col-end-13 p-3 rounded-lg">
         <div className="flex items-center justify-start flex-row-reverse">
-          <div className="flex items-center justify-center h-10 w-10 rounded-full bg-purple-500 flex-shrink-0">
+          <div className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-700 flex-shrink-0">
             U
           </div>
-          <div className="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl text-left">
+          <div className="relative mr-3 text-sm bg-blue-100 py-2 px-4 shadow rounded-xl text-left">
             <div>{props.message.content}</div>
           </div>
         </div>
@@ -97,7 +97,7 @@ function App() {
                 <div className="relative w-full">
                   <input
                     type="text"
-                    className="flex w-full border rounded-xl focus:outline-none focus:border-indigo-300 pl-4 h-10"
+                    className="flex w-full border rounded-xl focus:outline-none focus:border-blue-300 pl-4 h-10"
                     value={input}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       setInput(e.target.value);
@@ -118,7 +118,7 @@ function App() {
               </div>
               <div className="ml-4">
                 <button
-                  className="flex items-center justify-center bg-indigo-500 hover:bg-indigo-600 rounded-xl text-white px-4 py-1 flex-shrink-0"
+                  className="flex items-center justify-center bg-blue-500 hover:bg-blue-600 rounded-xl text-white px-4 py-1 flex-shrink-0"
                   onClick={() => {
                     const newMessage: Message = {
                       content: input,

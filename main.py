@@ -5,6 +5,7 @@ import os
 from typing import List
 from dotenv import load_dotenv
 load_dotenv() 
+import openai
 import requests
 
 # API KEYS
@@ -14,6 +15,8 @@ URL_SHORTENER = os.environ['URL_SHORTENER']
 TRANSLATE_API_KEY = os.environ['TRANSLATE_API_KEY']
 HOLIDAYS_API_KEY = os.environ['HOLIDAYS_API_KEY']
 MEME_API_KEY = os.environ['MEME_API_KEY']
+JOKES_API_KEY = os.environ['JOKES_API_KEY']
+SONGS_API_KEY = os.environ['SONGS_API_KEY']
 
 # Load your OpenAI API key
 models.OpenAI.api_key =MY_API_KEY
@@ -84,9 +87,78 @@ def get_memes():
     data = response.json()
     title = data[0]['title']
     url = data[0]['url']
-    return url+title;
+    return "<img src="+url+"/>\n"+title;
+
+def get_joke():
     
-def get_holidays(countrycode):
+    url = "https://jokes-by-api-ninjas.p.rapidapi.com/v1/jokes"
+
+    headers = {
+        "X-RapidAPI-Key": JOKES_API_KEY,
+        "X-RapidAPI-Host": "jokes-by-api-ninjas.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers).json()
+    data = response[0]['joke']
+    print(response)
+    return data
+    
+def download_song():
+    
+    url = "https://spotify-downloader1.p.rapidapi.com/download/22LAwLoDA5b4AaGSkg6bKW"
+
+    headers = {
+        "X-RapidAPI-Key": SONGS_API_KEY,
+        "X-RapidAPI-Host": "spotify-downloader1.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    song_link = data['link']
+    image_url = data['metadata']['cover']
+    artists = data['metadata']['artists']
+    song_title = data['metadata']['title']
+    return f"""<strong>{song_title}</strong><br>
+    <strong>Artist: {artists}</strong>
+    <img src="{image_url}" alt="{song_title} cover" width="200">
+    <audio controls>
+        <source src="{song_link}" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>""";
+
+def song_playlist():
+    url = "https://spotify-downloader1.p.rapidapi.com/trackList/playlist/37i9dQZF1DX0XUsuxWHRQd"
+
+    headers = {
+        "X-RapidAPI-Key": SONGS_API_KEY,
+        "X-RapidAPI-Host": "spotify-downloader1.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    print(data)
+    result = "<ul>"
+    for track in data['trackList']:
+        title = track['title']
+        artists = track['artists']
+        cover_url = track['cover']
+        album = track['album']
+        release_date = track['releaseDate']
+
+        result += f"""
+            <li>
+                <strong>Title:</strong> {title}<br>
+                <strong>Artists:</strong> {artists}<br>
+                <strong>Album:</strong> {album}<br>
+                <strong>Release Date:</strong> {release_date}<br>
+                <img src="{cover_url}" alt="{title} - {artists}" height="100" width="100">
+            </li>
+        """
+
+    result += "</ul>"
+    return result
+    
+def get_holidays():
 
 
     url = "https://working-days.p.rapidapi.com/1.3/analyse"
@@ -103,12 +175,17 @@ def get_holidays(countrycode):
 
     public_holidays = data.get('public_holidays', {}).get('list', [])
 
-    result_string = "Holiday Days:\n"
-
+    result_string = "<strong>Indian Public Holiday Days📍</strong>\n"
+    result_string += "<ul>\n---------------\n"
     for holiday in public_holidays:
         description = holiday.get('description', 'N/A')
-        date = holiday.get('date', 'N/A')
-        result_string += f"- {description}: {date}\n"
+        date = holiday.get('date', 'N/A');
+        date_parts = date.split('-')
+        reversed_date_parts = date_parts[::-1]
+        reversed_date = '-'.join(reversed_date_parts)
+        result_string += f"<li><strong>{description}:</strong> <em>{reversed_date}</em></li>\n"
+    result_string += "</ul>"
+
 
     return result_string
     
@@ -132,12 +209,18 @@ def on_message(message_history: List[Message], state: dict = None):
         bot_response = "Hello 😁! How can I assist you? Type start to look for all the commands"
         
     elif user_message.startswith("start"):
-        bot_response = """Here are some of the commands you can use:
-        - urlshorten [Link]: To get shorten link for your long url
-        - translate [Text]: To translate your text from English to Hindi
-        - holidays: To fetch all the public holidays of your country
-        - ask: To ask any query from the internet
-        - meme: To generate a meme
+        bot_response = """
+        <p><strong>Here are some of the commands you can use:</strong></p>
+        <ul>
+        <li><strong>urlshorten [Link]:</strong> To get a shortened link for your long URL 😁</li>
+        <li><strong>translate [Text]:</strong> To translate your text from English to Hindi 💬</li>
+        <li><strong>holidays:</strong> To fetch all the public holidays of India 🎃</li>
+        <li><strong>ask:</strong> To ask any query from the internet 🧐</li>
+        <li><strong>meme:</strong> To generate a meme 😄</li>
+        <li><strong>joke:</strong> To generate a joke 😵‍💫</li>
+        <li><strong>playsong:</strong> To play a Spotify song 🎵</li>
+        <li><strong>spotifyplaylist:</strong> To get a Spotify playlist 📽️</li>
+        </ul>
         """
     elif user_message.startswith("meme"):
         bot_response=get_memes();
@@ -147,20 +230,32 @@ def on_message(message_history: List[Message], state: dict = None):
         bot_response = get_urlshorten(url)
         
     elif user_message.startswith("translate"):
-        text = user_message.replace("translate", "").strip()
+        text = user_message.replace("translate", "").strip().lower()
         bot_response = get_translate(text)
     
     elif user_message.startswith("holidays"):
-        bot_response = "Please Enter Your Country Code"
-        text = user_message.upper();
-        bot_response = get_holidays(text)
+        bot_response = get_holidays()
+        
+    elif user_message.startswith("generate"):
+        url = user_message.replace("generate", "").strip()
+        bot_response = generate_image(url)
+        
+    elif user_message.startswith("joke"):
+        bot_response = get_joke()
+    
+    elif user_message.startswith("playsong"):
+        bot_response = download_song()
+        
+    elif user_message.startswith("spotifyplaylist"):
+        bot_response = song_playlist()
         
     else:
         # # Generate GPT-3.5 Turbo response
         bot_response = models.OpenAI.generate(
         system_prompt=SYSTEM_PROMPT,
-        message_history=message_history,
+        message_history=user_message,
         model="gpt-3.5-turbo",
+        
     )
 
     return bot_response, state
