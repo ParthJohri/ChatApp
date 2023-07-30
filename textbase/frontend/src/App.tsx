@@ -16,7 +16,8 @@ function ChatMessage(props: { message: Message }) {
             A
           </div>
           <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl text-left">
-            <div>{props.message.content}</div>
+            {/* <div>{props.message.content}</div> */}
+            <div dangerouslySetInnerHTML={{ __html: props.message.content}}/>
           </div>
         </div>
       </div>

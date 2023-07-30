@@ -13,6 +13,7 @@ WEATHER_API_KEY = os.environ['WEATHER_API']
 URL_SHORTENER = os.environ['URL_SHORTENER']
 TRANSLATE_API_KEY = os.environ['TRANSLATE_API_KEY']
 HOLIDAYS_API_KEY = os.environ['HOLIDAYS_API_KEY']
+MEME_API_KEY = os.environ['MEME_API_KEY']
 
 # Load your OpenAI API key
 models.OpenAI.api_key =MY_API_KEY
@@ -22,8 +23,11 @@ models.OpenAI.api_key =MY_API_KEY
 # Prompt for GPT-3.5 Turbo
 SYSTEM_PROMPT = """You are chatting with an AI. There are no specific prefixes for responses, so you can ask or talk about anything you like. The AI will respond in a natural, conversational manner. Feel free to start the conversation with any question or topic, and let's have a pleasant chat!
 """
+
 MY_USERNAME = os.environ['MY_USERNAME']
 CONTESTS_API_KEY = os.environ['CONTESTS_API_KEY']
+
+
 def get_contest():
     response = requests.get(f"https://clist.by/api/v1/contest/?username={MY_USERNAME}&api_key={CONTESTS_API_KEY}")
     print(response);
@@ -67,13 +71,27 @@ def get_urlshorten(long_url):
     except :
         return "Please re-enter your URL with along with http"
 
-def get_holidays(countrycode):
+
+def get_memes():
     
-    cc = "IN" if countrycode == "" else countrycode
+    url = "https://reddit-meme.p.rapidapi.com/memes/top"
+
+    headers = {
+        "X-RapidAPI-Key": MEME_API_KEY,
+        "X-RapidAPI-Host": "reddit-meme.p.rapidapi.com"
+    }
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    title = data[0]['title']
+    url = data[0]['url']
+    return url+title;
+    
+def get_holidays(countrycode):
+
 
     url = "https://working-days.p.rapidapi.com/1.3/analyse"
 
-    querystring = {"start_date":"2013-01-01","end_date":"2013-12-31","country_code":cc,"end_time":"18:15","start_time":"09:14"}
+    querystring = {"start_date":"2013-01-01","end_date":"2013-12-31","country_code":"IN","end_time":"18:15","start_time":"09:14"}
 
     headers = {
         "X-RapidAPI-Key": HOLIDAYS_API_KEY,
@@ -111,16 +129,18 @@ def on_message(message_history: List[Message], state: dict = None):
     user_message = message_history[-1].content.lower()
 
     if user_message.startswith("hi"):
-        bot_response = "Hello! How can I assist you? Type start to look for all the commands"
+        bot_response = "Hello 😁! How can I assist you? Type start to look for all the commands"
         
     elif user_message.startswith("start"):
-        bot_response = """**Here are some of the commands you can use:**
+        bot_response = """Here are some of the commands you can use:
         - urlshorten [Link]: To get shorten link for your long url
         - translate [Text]: To translate your text from English to Hindi
         - holidays: To fetch all the public holidays of your country
         - ask: To ask any query from the internet
+        - meme: To generate a meme
         """
-    
+    elif user_message.startswith("meme"):
+        bot_response=get_memes();
     elif user_message.startswith("urlshorten"):
         url = user_message.replace("urlshorten", "").strip()
         print(url);
@@ -135,13 +155,12 @@ def on_message(message_history: List[Message], state: dict = None):
         text = user_message.upper();
         bot_response = get_holidays(text)
         
-    elif user_message.startswith("ask"):
-        message_history = user_message.replace("ask", "").strip()
+    else:
         # # Generate GPT-3.5 Turbo response
         bot_response = models.OpenAI.generate(
-            system_prompt=SYSTEM_PROMPT,
-            message_history=message_history,
-            model="gpt-3.5-turbo",
-        )
+        system_prompt=SYSTEM_PROMPT,
+        message_history=message_history,
+        model="gpt-3.5-turbo",
+    )
 
     return bot_response, state
