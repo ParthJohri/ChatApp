@@ -1,9 +1,8 @@
 # Alpha Bot - A Multi Purpose Chat App 🔥
 
-<div style="display: flex; align-items: center; justify-content: center;">
+<p align="center">
   <img src="img/alpha-bot.png" alt="Chat App with Textbase UI" style="width: 200px; height: 200px;">
-</div>
-
+</p>
 
 ## Introduction 🚀
 
